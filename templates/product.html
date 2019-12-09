@@ -5,21 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>MaiMai Shopping</title>
+    <style>
+    #wrapper{
+        width: 800px;
+    }
+    h1{
+        display: inline-block;
+    }
+    #greeting{
+        display: inline-block;
+        margin-left: 200px;
+    }
+    #logout{
+        display: inline-block;
+    }
+    #shoppingcart{
+        display: inline-block;
+    }
+    #productSection{
+        width: 250px;
+        display: inline-block;
+        vertical-align: top;
+        margin-left: 300px;
+        
+        text-align: center;
+    }
+    img{
+        width: 186px;
+    }
+    input{
+        margin-bottom: 30px;
+    }
+    </style>
 </head>
 <body>
-    <h1>MaiMai Shopping </h1>
-    <h2>Hello {{user['first_name']}}!</h2>
-    <h5><a href="/logout">Logout</a></h5>
-    <h5><a href="/shoppingcart">Shopping Cart</a></h5>
+    <div id="wrapper">
+        <h1>MaiMai Shopping </h1>
+        <h5 id="greeting">Hello {{user['first_name']}}!</h5>
+        <h5 id="logout"><a href="/logout">Logout</a></h5>
+        <h5 id="shoppingcart"><a href="/shoppingcart">Shopping Cart</a></h5>
 
-    {% for product in products %}
-        <p>{{product.product_image}}</p>
-        <p>{{product.product_name}}</p>
-        <p>{{product.product_price}}</p>
-        <form action="/addShoppingCart" method="POST">
-            <input type="submit" value='Add'>
-        </form>
-    {% endfor %}
-    
+        <div id="productSection">
+        {% for product in user['product'] %}
+        
+            <img src="{{product['product_image']}}" alt="maxiDress">
+            <p>{{product['product_name']}}</p>
+            <p>{{product['product_price']}}</p>
+            <form action="/addShoppingCart" method='POST'>
+                <input type="hidden" name="productId" value="{{product['id']}}">
+                <input type="hidden" name="userId" value="{{user['user_id']}}">
+                <input type="submit" value="Add to Cart">
+            </form>
+        
+        {% endfor %}
+    </div>
+    </div>
 </body>
 </html>

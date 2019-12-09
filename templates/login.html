@@ -5,16 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>MaiMai Shopping</title>
+    <style>
+        .wrapper{
+            width: 800px;
+        }
+        h3{
+            text-align: center;
+        }
+        #message{
+            color: red;
+        }
+        .left{
+            border: 2px solid black;
+            display: inline-block;
+            text-align: left;
+            padding: 10px;
+        }
+        .right{
+            width: 277px;
+            border: 2px solid black;
+            display: inline-block;
+            text-align: left;
+            padding: 10px;
+            align-self: flex-start;
+            vertical-align: top;
+        }
+        .reformatbutton{
+            background-color:none;
+            color: black;
+            padding: 3px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border: 2px solid black;
+            margin-bottom: 3px;
+            margin-left: 200px;
+            font-size: 16px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
 </head>
 <body>
     <h1>MaiMai Shopping </h1>
     <h5><a href="/">Don't have an account? Register here!</a></h5>
-    <form action="/on_login" method="POST" >
-        <h3>Login</h3>
-        <p>Email: <input type="text" name="em"></p>
-        <p>Password: <input type="text" name="pw"></p>
-        <input type="submit" value="Login" class="reformatbutton">
-    </form>
-    
+
+    <div id="message">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <p>{{message}}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+    </div>
+
+    <div class='wrapper'>
+    <div class='left'>
+        <form action="/on_login" method="POST" >
+            <h3>Login</h3>
+            <p>Email: <input type="text" name="em"></p>
+            <p>Password: <input type="text" name="pw"></p>
+            <input type="submit" value="Login" class="reformatbutton">
+        </form>
+    </div>
+    </div>
 </body>
 </html>

@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy			# instead of mysqlconnection
 from sqlalchemy.sql import func, expression     # ADDED THIS LINE FOR DEFAULT TIMESTAMP
 from flask_migrate import Migrate			# this is new
 from flask_bcrypt import Bcrypt
-import re
+import re, collections
 
 app = Flask(__name__)
 app.secret_key = "soloproject"
@@ -29,13 +29,32 @@ class User(db.Model):
     confirm_pw = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, server_default=func.now())    # notice the extra import statement above
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+    # shopping_cart = db.relationship("ShoppingCart", uselist=False, back_populates="user")
 
 class Order(db.Model):	#one to many relationship with Product; one to many with user
     __tablename__ = "order"    # optional		
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', foreign_keys=[user_id], backref="orders", cascade="all")
+    user = db.relationship('User', foreign_keys=[user_id], backref="orders")
     product_ids = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())    # notice the extra import statement above
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+class Shopping_Cart(db.Model):	
+    __tablename__ = "shopping_cart"    # optional		
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', foreign_keys=[user_id], backref="shopping_cart", cascade="all")
+    product_ids = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())    # notice the extra import statement above
+    updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
+
+class ShoppingCart(db.Model):	
+    __tablename__ = "shoppingcart"    # optional		
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', foreign_keys=[user_id], backref="shoppingcart", cascade="all")
+    product_ids = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, server_default=func.now())    # notice the extra import statement above
     updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -132,11 +151,28 @@ def homepage():
     if user_with_correct_id:
         user_data =  {}
         user_data['first_name'] = user_with_correct_id[0].first_name
-    products = Product.query.all()
-    return render_template('product.html', user=user_data, products=products)
+        user_data['user_id'] = user_with_correct_id[0].id
+        user_data['product'] = []
+        product = Product.query.all()
+        user_data['product'].extend(product)
+    return render_template('product.html', user=user_data)
 
 @app.route('/addShoppingCart', methods=['POST'])
 def addShoppingCart():
+    # product_id = Product.query.
+    print(request.form['productId'])
+    print('********')
+    print(request.form['userId'])
+    carts = ShoppingCart.query.filter_by(user_id = request.form['userId'])
+    if not carts:
+        cart = ShoppingCart(user_id = request.form['userId'])
+    else:
+        cart = carts[0]
+    p_list = cart.product_ids.split(',')
+    p_list.append(int(request.form['productId']))
+    cart.product_ids = ','.join(map(str, p_list))
+    db.session.add(cart)
+    db.session.commit()
     return redirect('/shoppingcart')
 
 @app.route('/shoppingcart')
@@ -148,14 +184,49 @@ def shoppingcart():
     if user_with_correct_id:
         user_data =  {}
         user_data['first_name'] = user_with_correct_id[0].first_name
-    # products = Product.query.filter_by()
-    return render_template('shoppingcart.html', user=user_data)
+    cart = ShoppingCart.query.filter_by(user_id = session['id']).all()
+    p_list = cart[0].product_ids.split(',')
+    while '' in p_list:
+        p_list.remove('')
+    if p_list is None:
+        return render_template('/shoppingcart.html')
+        print(p_list)
+    else:
+        counter = collections.Counter(p_list)
+        print(counter)
+        shopping_cart_items = []
+        total_price = 0
+        for (key,value) in counter.most_common():
+            product_dict = {}
+            print('Key: ', key, 'Value: ', value)
+            product = Product.query.filter_by(id = key)[0]
+            print(product)
+            qty = value
+            subtotal_price = qty * int(product.product_price)
+            product_dict['product'] = product
+            product_dict['qty'] = qty
+            product_dict['subtotal_price'] = subtotal_price
+            shopping_cart_items.append(product_dict)
+            user_data['product'] = shopping_cart_items
+            total_price += subtotal_price
+    return render_template('shoppingcart.html', user_data=user_data, total_price=total_price)
+
+@app.route('/purchased', methods=['POST'])
+def purchased():
+    shoppingcart_items = ShoppingCart.query.filter_by(user_id = session['id']).all()[0]
+    userID = shoppingcart_items.user_id
+    productIDs = shoppingcart_items.product_ids
+    add_to_order = Order(user_id = userID, product_ids = productIDs)
+    db.session.add(add_to_order)
+    db.session.commit()
+    shoppingcart_items.product_ids = ''
+    db.session.commit()
+    return redirect('/complete')
 
 @app.route('/complete')
 def complete():
     if 'id' not in session:
         return redirect('/')
-    print("******")
     user_with_correct_id = User.query.filter_by(id=session['id']).all()
     if user_with_correct_id:
         user_data =  {}

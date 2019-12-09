@@ -5,14 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>MaiMai Shopping</title>
+    <style>
+        #wrapper{
+            width: 800px;
+        }
+        h1{
+            display: inline-block;
+        }
+        #greeting{
+            display: inline-block;
+            margin-left: 200px;
+        }
+        #logout{
+            display: inline-block;
+        }
+        #shoppingcart{
+            display: inline-block;
+        }
+        #cartSection{
+            width: 800px;
+        }
+        .details{
+            display: inline-block;
+            margin-left: 30px;
+            margin-right: 30px;
+            vertical-align: top;
+            margin-top: 110px;
+        }
+        img{
+            width: 186px;
+        }
+        input{
+            margin-bottom: 30px;
+        }
+        #totalprice{
+            margin-left: 565px;
+            font-size: large;
+            font-weight: bold;
+        }
+        #purchase{
+            background-color:none;
+            color: black;
+            padding: 3px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border: 2px solid black;
+            margin-bottom: 3px;
+            margin-left: 565px;
+            font-size: 16px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
 </head>
 <body>
-    <h1>MaiMai Shopping </h1>
-    <h2>Hello {{user['first_name']}}!</h2>
-    <h5><a href="/logout">Logout</a></h5>
-    <h5><a href="/homepage">Keep Shopping</a></h5>
+    <div id="wrapper">
+        <h1>MaiMai Shopping </h1>
+        <h5 id="greeting">Hello {{user_data['first_name']}}!</h5>
+        <h5 id="logout"><a href="/logout">Logout</a></h5>
+        <h5 id="shoppingcart"><a href="/homepage">Keep Shopping</a></h5>
 
-    <a href="/complete">Purchase</a>
-    
+        {% for item in user_data['product'] %}
+        <div id="cartSection">
+            <img src="{{item['product']['product_image']}}" alt="maxiDress">
+            <p class="details">Item: {{item['product']['product_name']}}</p>
+            <p class="details">Quantity: {{item['qty']}}</p>
+            <p class="details">Unit Price: {{item['product']['product_price']}}</p>
+            <p class="details">${{item['subtotal_price']}}</p>
+        </div>
+        {% endfor %}
+        <p id="totalprice">Total Price: ${{total_price}}</p>
+        <form action="/purchased" method="POST">
+            <input type="submit" value="Purchase" id="purchase">
+        </form>
+    </div>
 </body>
 </html>
